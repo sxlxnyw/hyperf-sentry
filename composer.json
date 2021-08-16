@@ -22,7 +22,7 @@
         "php": ">=7.3",
         "ext-swoole": ">=4.5",
         "hyperf/framework": "2.2.*",
-        "hyperf/di": "2.1.*",
+        "hyperf/di": "2.2.*",
         "sentry/sdk": "^2.1"
     },
     "require-dev": {
