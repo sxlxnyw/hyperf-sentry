@@ -111,41 +111,45 @@ class RequestIntegration implements IntegrationInterface
             return;
         }
 
-        $requestData = [
-            'url' => (string) $request->getUri(),
-            'method' => $request->getMethod(),
-        ];
+        try{
+            $requestData = [
+                'url' => (string) $request->getUri(),
+                'method' => $request->getMethod(),
+            ];
 
-        if ($request->getUri()->getQuery()) {
-            $requestData['query_string'] = $request->getUri()->getQuery();
-        }
-
-        if ($options->shouldSendDefaultPii()) {
-            $serverParams = $request->getServerParams();
-
-            if (isset($serverParams['REMOTE_ADDR'])) {
-                $requestData['env']['REMOTE_ADDR'] = $serverParams['REMOTE_ADDR'];
+            if ($request->getUri()->getQuery()) {
+                $requestData['query_string'] = $request->getUri()->getQuery();
             }
 
-            $requestData['cookies'] = $request->getCookieParams();
-            $requestData['headers'] = $request->getHeaders();
+            if ($options->shouldSendDefaultPii()) {
+                $serverParams = $request->getServerParams();
 
-            $userContext = $event->getUserContext();
+                if (isset($serverParams['REMOTE_ADDR'])) {
+                    $requestData['env']['REMOTE_ADDR'] = $serverParams['REMOTE_ADDR'];
+                }
 
-            if ($userContext->getIpAddress() === null && isset($serverParams['REMOTE_ADDR'])) {
-                $userContext->setIpAddress($serverParams['REMOTE_ADDR']);
+                $requestData['cookies'] = $request->getCookieParams();
+                $requestData['headers'] = $request->getHeaders();
+
+                $userContext = $event->getUserContext();
+
+                if ($userContext->getIpAddress() === null && isset($serverParams['REMOTE_ADDR'])) {
+                    $userContext->setIpAddress($serverParams['REMOTE_ADDR']);
+                }
+            } else {
+                $requestData['headers'] = $this->removePiiFromHeaders($request->getHeaders());
             }
-        } else {
-            $requestData['headers'] = $this->removePiiFromHeaders($request->getHeaders());
+
+            $requestBody = $this->captureRequestBody($options, $request);
+
+            if (! empty($requestBody)) {
+                $requestData['data'] = $requestBody;
+            }
+
+            $event->setRequest($requestData);
+        }catch (\Throwable $t){
+            return;
         }
-
-        $requestBody = $this->captureRequestBody($options, $request);
-
-        if (! empty($requestBody)) {
-            $requestData['data'] = $requestBody;
-        }
-
-        $event->setRequest($requestData);
     }
 
     /**
