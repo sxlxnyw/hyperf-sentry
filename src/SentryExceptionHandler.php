@@ -51,6 +51,14 @@ class SentryExceptionHandler extends ExceptionHandler
      */
     public function isValid(Throwable $throwable): bool
     {
+        if($throwable instanceof HttpException){
+            $code = $throwable->getStatusCode();
+            if($code>=400 && $code<500){
+                return fase;
+            }else{
+                return true;
+            }
+        }
         return true;
     }
 }
