@@ -6,6 +6,7 @@ namespace Minbaby\HyperfSentry;
 
 use Hyperf\Contract\ConfigInterface;
 use Hyperf\ExceptionHandler\ExceptionHandler;
+use Hyperf\HttpMessage\Exception\NotFoundHttpException;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface;
 use Sentry\ClientBuilderInterface;
@@ -51,13 +52,8 @@ class SentryExceptionHandler extends ExceptionHandler
      */
     public function isValid(Throwable $throwable): bool
     {
-        if($throwable instanceof HttpException){
-            $code = $throwable->getStatusCode();
-            if($code>=400 && $code<500){
-                return fase;
-            }else{
-                return true;
-            }
+        if($throwable instanceof NotFoundHttpException){
+            return fase;
         }
         return true;
     }
